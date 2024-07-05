@@ -18,10 +18,6 @@ print("서버가 시작되었습니다. 클라이언트를 기다리는 중...")
 client_socket, addr = server_socket.accept()
 print(f"클라이언트 {addr} 가 연결되었습니다.")
 
-# selected_ids = set()
-# previous_contours = {}
-# next_id = 0
-
 green = (0,255,0)
 thick = 10
 
@@ -38,9 +34,9 @@ def on_mouse_tracking_depth(event, x, y, flags, param):
         IsTrackingDepth=True
         for contour_depth in param[0]:
             if cv2.pointPolygonTest(contour_depth, (x, y), False) >= 0:
-                x, y, w, h = cv2.boundingRect(contour_depth)
+                xx, yy, w, h = cv2.boundingRect(contour_depth)
                 trackerDepth = cv2.TrackerCSRT_create()
-                roi = (x,y,w,h)
+                roi = (xx,yy,w,h)
                 trackerDepth.init(param[1],roi)
                 break
     if event==cv2.EVENT_RBUTTONDOWN:
@@ -51,23 +47,36 @@ def on_mouse_tracking_color(event, x, y, flags, param):
     global IsTrackingColor
     global trackerColor
     if event == cv2.EVENT_LBUTTONDOWN:
-        IsTrackingColor=True
-        for contour_color in param[0]:
-            if cv2.pointPolygonTest(contour_color, (x, y), False) >= 0:
-                x, y, w, h = cv2.boundingRect(contour_color)
-                trackerColor = cv2.TrackerCSRT_create()
-                roi_color = (x,y,w,h)
-                trackerColor.init(param[1],roi_color)
-                break
-            else:
-                print(type(param))
-    if event==cv2.EVENT_RBUTTONDOWN:
+        IsTrackingColor = True
+        contour_color = param[0]
+        threshold = 50
+
+        # 영역 내 contour 점들 찾기
+        region_contours = []
+        for cnt in contour_color:
+            for pt in cnt:
+                if (x - threshold) <= pt[0][0] <= (x + threshold) and (y - threshold) <= pt[0][1] <= (y + threshold):
+                    region_contours.append(pt)
+
+        if region_contours:
+            x_min = min(pt[0][0] for pt in region_contours)
+            x_max = max(pt[0][0] for pt in region_contours)
+            y_min = min(pt[0][1] for pt in region_contours)
+            y_max = max(pt[0][1] for pt in region_contours)
+
+            w = x_max - x_min
+            h = y_max - y_min
+            trackerColor = cv2.TrackerCSRT_create()
+            roi_color = (x_min, y_min, w, h)
+            trackerColor.init(param[1], roi_color)
+    if event==cv2.EVENT_RBUTTONDOWN & cv2.EVENT_FLAG_SHIFTKEY:
         IsTrackingColor=False
         trackerColor=0
 
 class DepthImageBounding:
     def __init__(self,data_depth):
         self.data_depth = data_depth
+
         # 데이터 역직렬화
         self.image_depth = pickle.loads(self.data_depth)
 
@@ -93,8 +102,6 @@ class DepthImageBounding:
 
                 cv2.rectangle(self.boundary_image_depth, (self.found_x1_d, self.found_y1_d), (self.found_x2_d, self.found_y2_d), green, thick)
 
-
-    
     def image_out(self):
         # 화면 출력
         cv2.namedWindow('Depth Bounding', cv2.WINDOW_AUTOSIZE)
@@ -107,6 +114,7 @@ class DepthImageBounding:
 class ColorImageBounding:
     def __init__(self,data_color):
         self.data_color = data_color
+        
         # 데이터 역직렬화
         self.image_color = pickle.loads(self.data_color)
 
@@ -114,20 +122,20 @@ class ColorImageBounding:
         self.blurred_image_color = cv2.GaussianBlur(self.image_color, (3, 3), 0)
         self.canny_image_color = cv2.Canny(self.blurred_image_color,50,200)
 
-        # 마스크를 사용하여 윤곽선 찾기
-        self.contours_color, _ = cv2.findContours(self.canny_image_color, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+        # canny image filtering
+        self.kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7,7))
+        self.closed_image_color = cv2.morphologyEx(self.canny_image_color, cv2.MORPH_CLOSE, self.kernel)
+        
         # 마스크를 사용하여 윤곽선 찾기
         self.contours_color, _ = cv2.findContours(self.canny_image_color, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # 이미지에 countours 초록색 윤곽선 입히기
-        cv2.drawContours(self.boundary_image_depth, self.contours_depth, -1, (0, 255, 0), 2)
         cv2.drawContours(self.image_color, self.contours_color, -1, (0, 255, 0), 1)
 
         if(trackerColor!=0):
-            self.isFound_color, self.foundBox_color = trackerColor.update(image_color)
+            self.isFound_color, self.foundBox_color = trackerColor.update(self.image_color)
 
-            if (self.sFound_color):
+            if (self.isFound_color):
                 self.found_x1_c = int(self.foundBox_color[0])
                 self.found_y1_c = int(self.foundBox_color[1])
                 self.found_x2_c = int(self.foundBox_color[0]+self.foundBox_color[2])
@@ -153,7 +161,7 @@ class ColorImageBounding:
     def image_out(self):
         # 화면 출력
         cv2.namedWindow('Color Bounding', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('Color Bounding', self.image_color)
+        cv2.imshow('Color Bounding', self.canny_image_color)
 
         # 마우스 콜백 설정
         cv2.setMouseCallback('Color Bounding', on_mouse_tracking_color, param=(self.contours_color,self.image_color))   
@@ -189,14 +197,14 @@ try:
                 break
             data_color += packet
 
-        # 데이터 역직렬화
-        image_depth = pickle.loads(data_depth)
-        image_color = pickle.loads(data_color)
-
+        # Class 생성
         Depthimagebounding = DepthImageBounding(data_depth)
-        # ColorImageBounding(image_color)
+        Colorimagebounding = ColorImageBounding(data_color)
 
+        # image 출력
         Depthimagebounding.image_out()
+        Colorimagebounding.image_out()
+
         # colormap_dim_depth = boundary_image_depth.shape
         # colormap_dim_color = canny_image_color.shape
 
