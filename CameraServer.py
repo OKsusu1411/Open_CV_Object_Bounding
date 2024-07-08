@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 
 # 서버 정보
-SERVER_IP = '127.0.0.1'
+SERVER_IP = '10.210.61.88'
 SERVER_PORT = 9999
 
 # 소켓 생성

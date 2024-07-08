@@ -13,7 +13,7 @@ config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 pipeline.start(config)
 
 # 서버 정보
-SERVER_IP = '127.0.0.1'  # 서버의 IP 주소를 입력하세요
+SERVER_IP = '10.210.61.88'  # 서버의 IP 주소를 입력하세요
 SERVER_PORT = 9999  # 서버의 포트를 입력하세요
 
 # 소켓 생성
