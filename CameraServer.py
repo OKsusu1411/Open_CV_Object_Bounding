@@ -5,12 +5,13 @@ import cv2
 
 # 서버 정보
 SERVER_IP = '10.210.61.88'
-SERVER_PORT = 9999
+SERVER_PORT = 9998
 
 # 소켓 생성
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((SERVER_IP, SERVER_PORT))
 server_socket.listen(5)
+
 
 print("서버가 시작되었습니다. 클라이언트를 기다리는 중...")
 
