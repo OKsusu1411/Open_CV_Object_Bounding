@@ -1,30 +1,9 @@
-import socket
 import pickle
 import numpy as np
 import cv2
-import argparse
-
-def TCP_Connect(ip, port):
-    # 소켓 생성
-    global server_socket
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((ip, port))
-    server_socket.listen(5)
-
-    print("서버가 시작되었습니다. 클라이언트를 기다리는 중...")
-
-    # 클라이언트 연결 수락
-    global client_socket
-    client_socket, addr = server_socket.accept()
-    print(f"클라이언트 {addr} 가 연결되었습니다.")
 
 green = (0,255,0)
 thick = 10
-
-IsTrackingDepth = False
-trackerDepth = 0
-IsTrackingColor = False
-trackerColor = 0
 
 # mouse 동작 할당
 def on_mouse_tracking_depth(event, x, y, flags, param):
@@ -110,14 +89,13 @@ class DepthImageBounding:
         # 마우스 콜백 설정
         cv2.setMouseCallback('Depth Bounding', on_mouse_tracking_depth, param=(self.contours_depth,self.boundary_image_depth))
 
-
 class ColorImageBounding:
     def __init__(self,data_color):
         self.data_color = data_color
         
         # 데이터 역직렬화
         self.image_color = pickle.loads(self.data_color)
-        self.iiii = pickle.loads(self.data_color)
+
         # gray_image_color = cv2.cvtColor(image_color, cv2.COLOR_GRAY2BGR)
         self.blurred_image_color = cv2.GaussianBlur(self.image_color, (3, 3), 0)
         self.canny_image_color = cv2.Canny(self.blurred_image_color,50,200)
@@ -161,7 +139,7 @@ class ColorImageBounding:
     def image_out(self):
         # 화면 출력
         cv2.namedWindow('Color Bounding', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('Color Bounding', self.iiii)
+        cv2.imshow('Color Bounding', self.image_color)
 
         # 마우스 콜백 설정
         cv2.setMouseCallback('Color Bounding', on_mouse_tracking_color, param=(self.contours_color,self.image_color))   
@@ -173,66 +151,3 @@ class ColorImageBounding:
 
         # 마우스 콜백 설정
         cv2.setMouseCallback('Color Bounding', on_mouse_tracking_color, param=(self.contours_color,self.image_color))    
-def main():
-    parser = argparse.ArgumentParser(description="TCP/IP Connection")
-    parser.add_argument('--host', type = str, default = '127.0.0.1')
-    parser.add_argument('--port', type = int, default = '9999')
-    args = parser.parse_args()
-    TCP_Connect(args.host, args.port)
-
-    try:
-        while True:
-            # depth 데이터 길이 정보 수신
-            data_len_depth = client_socket.recv(4)
-            if not data_len_depth:
-                break
-            data_len_depth = int.from_bytes(data_len_depth, byteorder='big')
-
-            # depth 데이터 수신
-            data_depth = b""
-            while len(data_depth) < data_len_depth:
-                packet_depth = client_socket.recv((data_len_depth - len(data_depth)))
-                if not packet_depth:
-                    break
-                data_depth += packet_depth
-            
-            # RGB 데이터 길이 정보 수신
-            data_len_color = client_socket.recv(4)
-            if not data_len_color:
-                break
-            data_len_color = int.from_bytes(data_len_color, byteorder='big')
-
-            # RGB 데이터 수신
-            data_color = b""
-            while len(data_color) < data_len_color:
-                packet = client_socket.recv((data_len_color - len(data_color)))
-                if not packet:
-                    break
-                data_color += packet
-
-            # Class 생성
-            Depthimagebounding = DepthImageBounding(data_depth)
-            Colorimagebounding = ColorImageBounding(data_color)
-
-            # image 출력
-            Colorimagebounding.image_out()
-
-            # colormap_dim_depth = boundary_image_depth.shape
-            # colormap_dim_color = canny_image_color.shape
-
-            # # if colormap_dim_depth != colormap_dim_color:
-            # #     resized_image_color = cv2.resize(canny_image_color, dsize=(colormap_dim_depth[1], colormap_dim_depth[0]), interpolation=cv2.INTER_AREA)
-            # #     images = np.hstack((resized_image_color, boundary_image_depth))
-            # # else:
-            # #     images = np.hstack((canny_image_color, boundary_image_depth))
-
-            # 'q' 키를 누르면 종료
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-    finally:
-        client_socket.close()
-        server_socket.close()
-        cv2.destroyAllWindows()
-        
-if __name__=="__main__":
-    main()

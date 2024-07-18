@@ -1,6 +1,11 @@
 import asyncio
 import websockets
 import argparse
+import sys
+import pickle
+import numpy as np
+import cv2
+from object_tracking import *
 
 connected = set()
 
@@ -9,11 +14,13 @@ async def chat_handler(websocket, path):
     try:
         # 정기적으로 핑 보내야 함
         # asyncio.create_task(ping_interval(websocket))
+        print(websocket.remote_address)
         while True:
             message = await websocket.recv()
-            broadcast_message = f"{websocket.remote_address}: {message}"
-            print(broadcast_message)
-            await broadcast(broadcast_message, websocket.remote_address)
+            #f"{websocket.remote_address}:
+            #broadcast_message = f"{message}"
+            #print(broadcast_message)
+            await broadcast(message, websocket.remote_address)
     except websockets.exceptions.ConnectionClosed:
         print(f"Connection closed: {websocket.remote_address}")
     finally:
