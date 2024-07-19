@@ -4,7 +4,7 @@ import pyrealsense2 as rs
 import numpy as np
 import argparse
 
-# RealSense 카메라 초기화
+# RealSense 카메라 초기화o
 pipeline = rs.pipeline()
 config = rs.config()
 config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 15)
@@ -55,6 +55,6 @@ def main():
         # 스트리밍 중지
         pipeline.stop()
         client_socket.close()
-        
+
 if __name__=="__main__":
     main()
