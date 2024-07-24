@@ -5,6 +5,8 @@ import sys
 import pickle
 import pyrealsense2 as rs
 import numpy as np
+import base64
+import json
 
 # RealSense 카메라 초기화
 pipeline = rs.pipeline()
@@ -23,19 +25,21 @@ async def send_messages(websocket):
         if not depth_frame or not color_frame:
             continue
 
-        # Depth 데이터를 numpy 배열로 변환
+        # Image 데이터를 numpy 배열로 변환
         depth_image = np.asanyarray(depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
 
-        # 데이터 직렬화
-        data_depth = pickle.dumps(depth_image)
-        data_color = pickle.dumps(color_image)
+        # 데이터 직렬화, base64 인코딩
+        data_depth = base64.b64encode(pickle.dumps(depth_image)).decode('utf-8')
+        data_color = base64.b64encode(pickle.dumps(color_image)).decode('utf-8')
 
-        message_depth=len(data_depth).to_bytes(4, byteorder='big')+data_depth
-        message_color=len(data_color).to_bytes(4, byteorder='big')+data_color
-        if message_depth or message_color:
-            await websocket.send(message_depth)
-            #await websocket.send(message_color)
+        # JSON으로 변환
+        message = json.dumps({
+            'depth': data_depth,
+            'color': data_color
+        })
+        
+        await websocket.send(message)
 
 async def receive_messages(websocket):
     try:

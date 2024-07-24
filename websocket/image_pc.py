@@ -7,6 +7,8 @@ import numpy as np
 import cv2
 from object_tracking import *
 import globals
+import base64
+import json
 
 async def send_messages(websocket):
     while True:
@@ -19,27 +21,18 @@ async def send_messages(websocket):
 async def receive_messages(websocket):
     try:
         while True:
-            # depth 데이터 길이 정보 수신
-            data_tmp_depth = await websocket.recv()
-            if len(data_tmp_depth) < 4:
-                continue
+            # JSON 데이터 수신
+            JSON_data = await websocket.recv()
+            # JSON parsing
+            data = json.load(JSON_data)
 
-            # data_len_depth = data_tmp_depth[:4]
-            # if not data_len_depth:
-            #     break
-            data_len_depth = int.from_bytes(data_tmp_depth[:4], byteorder='big')
+            # base64 디코딩 및 pickle 역직렬화
+            depth_data = pickle.loads(base64.b64decode(data['depth']))
+            color_data = pickle.loads(base64.b64decode(data['color']))
 
-            # depth 데이터 수신
-            data_depth = data_tmp_depth[4:]
-            while len(data_depth) < data_len_depth:
-                packet_depth = await websocket.recv()
-                if not packet_depth:
-                    break
-                data_depth += packet_depth
             
-            # 데이터 역직렬화
-            image_depth = pickle.loads(data_depth)
-            image_depth = np.array(image_depth, dtype=np.uint8)
+            depth_image = np.array(depth_data, dtype=np.uint8)
+            color_image = np.array(color_data, dtype=np.uint8)
             # # RGB 데이터 길이 정보 수신
             # data_len_color = await websocket.recv(4)
             # if not data_len_color:
@@ -58,8 +51,8 @@ async def receive_messages(websocket):
             # cv2.imshow('Color Bounding', image_depth)
             # cv2.waitKey(1)
             # Class 생성
-            Depthimagebounding = DepthImageBounding(data_depth)
-            # Colorimagebounding = ColorImageBounding(data_color)
+            Depthimagebounding = DepthImageBounding(depth_image)
+            # Colorimagebounding = ColorImageBounding(color_image)
             
             # image 출력
             Depthimagebounding.image_out()
@@ -67,7 +60,11 @@ async def receive_messages(websocket):
 
     except websockets.exceptions.ConnectionClosed:
         print("Connection to server closed.")
-
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {e}")
+    except Exception as e:
+        print(f"Error: {e}")
+        
 async def chat_client(ip, port):
     uri = f"ws://{ip}:{port}"
     try:
