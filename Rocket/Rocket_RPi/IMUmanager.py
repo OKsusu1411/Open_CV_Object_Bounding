@@ -22,7 +22,7 @@ class IMUmanager:
         self.undo_item=[0,0,0]
 
         # 서버 정보
-        self.SERVER_IP = '127.0.0.1'  # 서버의 IP 주소를 입력하세요
+        self.SERVER_IP = '10.210.60.149 '  # 서버의 IP 주소를 입력하세요
         self.SERVER_PORT = 8880  # 서버의 포트를 입력하세요
 
         self.IsCommunication=False
