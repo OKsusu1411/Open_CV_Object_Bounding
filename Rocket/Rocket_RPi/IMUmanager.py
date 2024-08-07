@@ -44,8 +44,9 @@ class IMUmanager:
                         self.mSensorCommunicationDataQueue.put(self.item)
                     else:
                         print(self.item)
-                except:
-                    print("Error") 
+                
+                except Exception as e:
+                    print("Error:", e)
                     break
 
     # def initConnect(self):
@@ -111,15 +112,23 @@ class IMUmanager:
                         sensor_item = self.mSensorCommunicationDataQueue.get_nowait()
                         
                         # 데이터 string화
-                        self.received_data=str(math.round(sensor_item[0],3))
-                        for i in range(self.number_of_item-1):
-                            self.received_data+=","
-                            self.received_data+=str(math.round(sensor_item[i+1],3))
-
+                        # self.received_data=str(round(sensor_item[0],3))
+                        # for i in range(self.number_of_item-1):
+                        #     self.received_data+=","
+                        #     self.received_data+=str(round(sensor_item[i+1],3))
+                        self.received_data = ",".join([str(round(val, 3)) for val in sensor_item])
+                        
                         # 이그나이터 상태, 단분리 상태, 1단 2단 서보 상태
                         # 속도 3축 , 각속도 3축 값
                         # 위치 3축 값 
-                        RocketStatus={'Time':math.round(time.time()%60,3),'IMUData':self.received_data,'IsIgnition':self.mRocketProtocol.IsIgnition,'IsSeperation':self.mRocketProtocol.IsSeperation,'Is1stServo':self.mRocketProtocol.Is1stServo,'Is2stServo':self.mRocketProtocol.Is2stServo}
+                        RocketStatus = {
+                            'Time': round(time.time() % 60, 3),
+                            'IMUData': self.received_data,
+                            'IsIgnition': self.mRocketProtocol.IsIgnition,
+                            'IsSeperation': self.mRocketProtocol.IsSeperation,
+                            'Is1stServo': self.mRocketProtocol.Is1stServo,
+                            'Is2stServo': self.mRocketProtocol.Is2stServo
+                        }
                         json_RocketStatus = json.dumps(RocketStatus)
 
                         # 데이터 전송
@@ -136,7 +145,6 @@ class IMUmanager:
         except KeyboardInterrupt:
             print("bye2")
             self.IsCommunication=False
-            websocket.close()
 
         finally:
             self.IsCommunication = False
