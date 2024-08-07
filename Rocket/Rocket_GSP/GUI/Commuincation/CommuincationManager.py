@@ -28,7 +28,7 @@ class CommunicationManager(QThread):
         self.parent=parent
 
         self.SERVER_IP = '10.210.60.149'  # 서버의 IP 주소를 입력하세요
-        self.SERVER_PORT = 8880  # 서버의 포트를 입력하세요
+        self.SERVER_PORT = 8881  # 서버의 포트를 입력하세요
 
     async def send_messages(self, websocket):# Send new interval to client
         try:
@@ -88,7 +88,7 @@ class CommunicationManager(QThread):
         try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            loop.run_until_complete(self.start_server('10.210.60.149',8880))
+            loop.run_until_complete(self.start_server('10.210.60.149',8881))
         except Exception as e:
             print(f"Error : {e}")
         finally:

@@ -29,7 +29,7 @@ class IMUmanager:
        
         # 서버 정보
         self.SERVER_IP = '10.210.60.149 '  # 서버의 IP 주소를 입력하세요
-        self.SERVER_PORT = 8880  # 서버의 포트를 입력하세요
+        self.SERVER_PORT = 8881  # 서버의 포트를 입력하세요
 
         self.IsCommunication=True
         self.ser =Serial('/dev/ttyUSB0',115200,parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS)
@@ -123,27 +123,26 @@ class IMUmanager:
                 await websocket.send(json_RocketStatus)
 
     async def receive_messages(self, websocket):
-        while True:
-            try:
-                new_interval_data = await websocket.recv()
-                print("New interval received:"+str(new_interval_data))
-                if new_interval_data!="None":
-                    readData = json.loads(new_interval_data)
-                    if readData.get("Ignition")!=None:
-                        if(readData["Ignition"]):
-                            #self.mRocketProtocol.set2ndServoBoolean(True)
-                            print("True")
-                        else:
-                            #self.mRocketProtocol.set2ndServoBoolean(False)
-                            print("False")
-            except websockets.exceptions.ConnectionClosed:
-                print("Connection to server closed.")
+        try:
+            new_interval_data = await websocket.recv()
+            print("New interval received:"+str(new_interval_data))
+            if new_interval_data!="None":
+                readData = json.loads(new_interval_data)
+                if readData.get("Ignition")!=None:
+                    if(readData["Ignition"]):
+                        #self.mRocketProtocol.set2ndServoBoolean(True)
+                        print("True")
+                    else:
+                        #self.mRocketProtocol.set2ndServoBoolean(False)
+                        print("False")
+        except websockets.exceptions.ConnectionClosed:
+            print("Connection to server closed.")
 
-            except json.JSONDecodeError as e:
-                print(f"JSON decode error: {e}")
-            
-            except Exception as e:
-                print(f"Error: {e}")
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}")
+        
+        except Exception as e:
+            print(f"Error: {e}")
 
     def setRocketProtocol(self,mRocketProtocol):
         self.mRocketProtocol=mRocketProtocol
@@ -175,7 +174,6 @@ class IMUmanager:
 
         finally:
             self.IsCommunication = False
-            websocket.close()
 
     def repeatData(self):
         while True:
