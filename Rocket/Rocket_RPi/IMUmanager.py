@@ -63,24 +63,50 @@ class IMUmanager:
     #     except Exception as e:
     #         print(f"Failed to connect or error during the session: {e}")
             
-    async def send_messages(self, websocket, message):
-            if message:
-                await websocket.send(message)
+    async def send_messages(self, websocket):
+            while not self.mSensorCommunicationDataQueue.empty():
+
+                # 과부화 방지
+                if self.mSensorCommunicationDataQueue.qsize()>5:
+                    self.mSensorCommunicationDataQueue.get()
+
+                #센서값 반환
+                sensor_item = self.mSensorCommunicationDataQueue.get_nowait()
+                
+                # 데이터 string화
+                # self.received_data=str(round(sensor_item[0],3))
+                # for i in range(self.number_of_item-1):
+                #     self.received_data+=","
+                #     self.received_data+=str(round(sensor_item[i+1],3))
+                self.received_data = ",".join([str(round(val, 3)) for val in sensor_item])
+                
+                # 이그나이터 상태, 단분리 상태, 1단 2단 서보 상태
+                # 속도 3축 , 각속도 3축 값
+                # 위치 3축 값 
+                RocketStatus = {
+                    'Time': round(time.time() % 60, 3),
+                    'IMUData': self.received_data,
+                    'IsIgnition': self.mRocketProtocol.IsIgnition,
+                    'IsSeperation': self.mRocketProtocol.IsSeperation,
+                    'Is1stServo': self.mRocketProtocol.Is1stServo,
+                    'Is2stServo': self.mRocketProtocol.Is2stServo
+                }
+                json_RocketStatus = json.dumps(RocketStatus)
+                await websocket.send(json_RocketStatus)
 
     async def receive_messages(self, websocket):
         try:
-            while True:
-                new_interval_data = await websocket.recv()
-                print("New interval received:"+str(new_interval_data))
-                if new_interval_data!="None":
-                    readData = json.loads(new_interval_data)
-                    if readData.get("Ignition")!=None:
-                        if(readData["Ignition"]):
-                            #self.mRocketProtocol.set2ndServoBoolean(True)
-                            print("True")
-                        else:
-                            #self.mRocketProtocol.set2ndServoBoolean(False)
-                            print("False")
+            new_interval_data = await websocket.recv()
+            print("New interval received:"+str(new_interval_data))
+            if new_interval_data!="None":
+                readData = json.loads(new_interval_data)
+                if readData.get("Ignition")!=None:
+                    if(readData["Ignition"]):
+                        #self.mRocketProtocol.set2ndServoBoolean(True)
+                        print("True")
+                    else:
+                        #self.mRocketProtocol.set2ndServoBoolean(False)
+                        print("False")
         except websockets.exceptions.ConnectionClosed:
             print("Connection to server closed.")
 
@@ -97,49 +123,19 @@ class IMUmanager:
 
     async def communicationData(self):
         websocket = None
-        
         try:
             self.IsCommunication=True
             uri = f"ws://{self.SERVER_IP}:{self.SERVER_PORT}"
             async with websockets.connect(uri) as websocket:
                 print(f'connected to {self.SERVER_IP}:{self.SERVER_PORT}')
                 while True:
-                    while not self.mSensorCommunicationDataQueue.empty():
+                    # 데이터 전송
+                    #print(json_RocketStatus)
+                    send_task = asyncio.create_task(self.send_messages(websocket))
 
-                        # 과부화 방지
-                        if self.mSensorCommunicationDataQueue.qsize()>5:
-                            self.mSensorCommunicationDataQueue.get()
-
-                        #센서값 반환
-                        sensor_item = self.mSensorCommunicationDataQueue.get_nowait()
-                        
-                        # 데이터 string화
-                        # self.received_data=str(round(sensor_item[0],3))
-                        # for i in range(self.number_of_item-1):
-                        #     self.received_data+=","
-                        #     self.received_data+=str(round(sensor_item[i+1],3))
-                        self.received_data = ",".join([str(round(val, 3)) for val in sensor_item])
-                        
-                        # 이그나이터 상태, 단분리 상태, 1단 2단 서보 상태
-                        # 속도 3축 , 각속도 3축 값
-                        # 위치 3축 값 
-                        RocketStatus = {
-                            'Time': round(time.time() % 60, 3),
-                            'IMUData': self.received_data,
-                            'IsIgnition': self.mRocketProtocol.IsIgnition,
-                            'IsSeperation': self.mRocketProtocol.IsSeperation,
-                            'Is1stServo': self.mRocketProtocol.Is1stServo,
-                            'Is2stServo': self.mRocketProtocol.Is2stServo
-                        }
-                        json_RocketStatus = json.dumps(RocketStatus)
-
-                        # 데이터 전송
-                        #print(json_RocketStatus)
-                        await self.send_messages(websocket,json_RocketStatus)
-
-                        # Receive new interval from server
-                        receive_task = asyncio.create_task(self.receive_messages(websocket))
-                        await receive_task
+                    # Receive new interval from server
+                    receive_task = asyncio.create_task(self.receive_messages(websocket))
+                    await asyncio.gather(receive_task,send_task)
 
         except Exception as e:
             print(f"Failed to connect or error during the session: {e}")
