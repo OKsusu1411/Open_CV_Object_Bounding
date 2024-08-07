@@ -26,7 +26,7 @@ class CommunicationManager(QThread):
         self.mSendDataQueue = queue.Queue()
         self.parent=parent
 
-        self.SERVER_IP = '127.0.0.1'  # 서버의 IP 주소를 입력하세요
+        self.SERVER_IP = '10.210.60.149'  # 서버의 IP 주소를 입력하세요
         self.SERVER_PORT = 8880  # 서버의 포트를 입력하세요
 
     async def send_messages(self, websocket, message):
