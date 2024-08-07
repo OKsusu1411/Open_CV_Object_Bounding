@@ -20,15 +20,19 @@ class IMUmanager:
         self.mSensorDataQueue = queue.Queue()
         self.mSensorCommunicationDataQueue = queue.Queue()
 
-        self.number_of_item = 9
-        self.item=[0,0,0]
-        self.undo_item=[0,0,0]
+        self.number_of_item = 6
+        self.item=[0,0,0,0,0,0]
+        self.undo_item=[0,0,0,0,0,0]
 
+        window_size = 10
+        self.filters = [MovingAverageFilter(window_size) for _ in range(self.number_of_item)]
+       
         # 서버 정보
         self.SERVER_IP = '10.210.60.149 '  # 서버의 IP 주소를 입력하세요
         self.SERVER_PORT = 8880  # 서버의 포트를 입력하세요
 
-        self.IsCommunication=False
+        self.IsCommunication=True
+        self.ser =Serial('/dev/ttyUSB0',115200,parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS)
         
     def getData(self):
         while True:
@@ -177,3 +181,18 @@ class IMUmanager:
         while True:
             self.mSensorCommunicationDataQueue.put(["1","1","6"])
             time.sleep(0.1)
+
+class MovingAverageFilter:
+    def __init__(self, window_size):
+        self.window_size = window_size
+        self.data_window = []
+
+    def add_value(self, value):
+        self.data_window.append(value)
+        if len(self.data_window) > self.window_size:
+            self.data_window.pop(0)
+
+    def get_filtered_value(self):
+        if len(self.data_window) == 0:
+            return None
+        return np.median(self.data_window)
