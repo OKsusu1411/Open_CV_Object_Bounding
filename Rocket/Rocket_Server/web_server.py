@@ -31,6 +31,7 @@ async def broadcast(message, remote_address):
     for websocket in connected:
         if websocket.remote_address == remote_address:
             continue
+        print("1111111111111111111111111111")
         await websocket.send(message)
 
 async def start_server(host, port):

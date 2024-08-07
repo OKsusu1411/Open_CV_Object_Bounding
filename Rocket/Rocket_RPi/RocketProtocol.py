@@ -66,16 +66,16 @@ class RocketProtocol:
         else:
             self.setSeprationServoPos(self.SERVOLOCK);
     
-    def Algorithm1Check(self):
+    def Algorithm1Check(self,data):
         # 1차 점화 완료 체크
         # 가속도 Global z값 확인
-        if False:
+        if data[5]>=2.5:
             self.RocketStep+=1
             return True
         else:
             return False    
         
-    def Algorithm2Check(self):
+    def Algorithm2Check(self,data):
         # 2차 점화전 시작 체크
         # 속도 Global z값 확인(1m/s 이상 True)
         # 각속도 Global x,y값 확인
@@ -85,7 +85,7 @@ class RocketProtocol:
         else:
             return False    
       
-    def Algorithm3Check(self):
+    def Algorithm3Check(self,data):
         # 2차 점화후 완료 체크
         # 알고리즘2 체크후 2초동안 확인, 2초 지나면 점화 중지
         # 가속도 Global z값 확인(가속도가 높아지지 않으면 점화 안된 것)
@@ -97,7 +97,7 @@ class RocketProtocol:
         else:
             return False      
      
-    def Algorithm4Check(self):
+    def Algorithm4Check(self,data):
         # 2차 추력 완료 체크 == 알고리즘 1번과 같음
         if False:
             self.RocketStep+=1
@@ -107,25 +107,26 @@ class RocketProtocol:
     
     def AlgorithmProcess(self,mSensorqueue):
         # 알고리즘 전체
-
+        data = mSensorqueue.get()
+        print(data)
         if(self.RocketStep==0):
             print("Rocket step1")
-            self.Algorithm1Check()
+            self.Algorithm1Check(data)
 
         elif(self.RocketStep==1):
             print("Rocket step2")
-            self.Algorithm2Check()
+            self.Algorithm2Check(data)
 
         elif(self.RocketStep==2):
             print("Rocket step3")
-            self.Algorithm3Check()
+            self.Algorithm3Check(data)
 
         elif(self.RocketStep==3):
             print("Rocket step4")
-            self.Algorithm4Check()
+            self.Algorithm4Check(data)
 
         else:
             print("Rocket finished")
 
-        return self.RocketStep>=self.RocketMaxStep    
+        return self.RocketStep>=self.RocketMaxStep        
     

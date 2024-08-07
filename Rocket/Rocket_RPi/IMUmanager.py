@@ -5,6 +5,9 @@ import queue
 import json
 import websockets
 
+from decimal import Decimal
+from serial import Serial
+import serial
 import math
 # sudo raspi-config
 # pip3 install pyserial
@@ -29,25 +32,44 @@ class IMUmanager:
         
     def getData(self):
         while True:
-            if self.ser.in_waiting > 0:
+            if self.ser.readable()> 0:
                 try:
-                    self.received_data = self.ser.readline().decode('utf-8').rstrip()
+                    res = self.ser.readline()
+#                    print(res)
+                    self.received_data = res.decode('utf-8')
+#                    print(self.received_data)
                     self.received_data = self.received_data.strip()
                     self.received_data = self.received_data.strip('*')
-                    print("Received:", self.received_data)
                     splited_texts = self.received_data.split(',')
-                    for i in range(0,self.number_of_item):
-                        self.item[i] = float(splited_texts[i])
 
+                    for i in range(0,self.number_of_item):
+                        #formatted_value=f"{math.ceil(float(splited_texts[i])*100)/100:.3f}"
+                        d = Decimal(splited_texts[i])
+                        
+                        self.item[i] = d.quantize(Decimal('0.001'))
+                        
+                        self.filters[i].add_value(self.item[i])
+                        self.item[i] = self.filters[i].get_filtered_value()
+                        self.item[i] = Decimal(self.item[i])
+                        self.item[i] = float(self.item[i].quantize(Decimal('0.001')))
+                    
+                    #print(self.item)
+                    self.mSensorDataQueue.put(self.item)
                     if(self.IsCommunication):
+                        self.mSensorCommunicationDataQueue.put(self.item)
+                    else:
+                        print(self.item)
+
+                except:
+                    for i in range(0,self.number_of_item):
+                        self.item[i] = 0.0
+                    if(self.IsCommuincation):
                         self.mSensorDataQueue.put(self.item)
                         self.mSensorCommunicationDataQueue.put(self.item)
                     else:
                         print(self.item)
-                
-                except Exception as e:
-                    print("Error:", e)
-                    break
+
+                    print("Error")
 
     # def initConnect(self):
     #     # 웹소켓 생성
@@ -64,6 +86,7 @@ class IMUmanager:
     #         print(f"Failed to connect or error during the session: {e}")
             
     async def send_messages(self, websocket):
+        while True:
             while not self.mSensorCommunicationDataQueue.empty():
 
                 # 과부화 방지
@@ -92,29 +115,31 @@ class IMUmanager:
                     'Is2stServo': self.mRocketProtocol.Is2stServo
                 }
                 json_RocketStatus = json.dumps(RocketStatus)
+                print(json_RocketStatus)
                 await websocket.send(json_RocketStatus)
 
     async def receive_messages(self, websocket):
-        try:
-            new_interval_data = await websocket.recv()
-            print("New interval received:"+str(new_interval_data))
-            if new_interval_data!="None":
-                readData = json.loads(new_interval_data)
-                if readData.get("Ignition")!=None:
-                    if(readData["Ignition"]):
-                        #self.mRocketProtocol.set2ndServoBoolean(True)
-                        print("True")
-                    else:
-                        #self.mRocketProtocol.set2ndServoBoolean(False)
-                        print("False")
-        except websockets.exceptions.ConnectionClosed:
-            print("Connection to server closed.")
+        while True:
+            try:
+                new_interval_data = await websocket.recv()
+                print("New interval received:"+str(new_interval_data))
+                if new_interval_data!="None":
+                    readData = json.loads(new_interval_data)
+                    if readData.get("Ignition")!=None:
+                        if(readData["Ignition"]):
+                            #self.mRocketProtocol.set2ndServoBoolean(True)
+                            print("True")
+                        else:
+                            #self.mRocketProtocol.set2ndServoBoolean(False)
+                            print("False")
+            except websockets.exceptions.ConnectionClosed:
+                print("Connection to server closed.")
 
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error: {e}")
-        
-        except Exception as e:
-            print(f"Error: {e}")
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+            
+            except Exception as e:
+                print(f"Error: {e}")
 
     def setRocketProtocol(self,mRocketProtocol):
         self.mRocketProtocol=mRocketProtocol
@@ -128,14 +153,14 @@ class IMUmanager:
             uri = f"ws://{self.SERVER_IP}:{self.SERVER_PORT}"
             async with websockets.connect(uri) as websocket:
                 print(f'connected to {self.SERVER_IP}:{self.SERVER_PORT}')
-                while True:
-                    # 데이터 전송
-                    #print(json_RocketStatus)
-                    send_task = asyncio.create_task(self.send_messages(websocket))
+                # 데이터 전송
+                #print(json_RocketStatus)
+                send_task = asyncio.create_task(self.send_messages(websocket))
 
-                    # Receive new interval from server
-                    receive_task = asyncio.create_task(self.receive_messages(websocket))
-                    await asyncio.gather(receive_task,send_task)
+                # Receive new interval from server
+                receive_task = asyncio.create_task(self.receive_messages(websocket))
+                
+                await asyncio.gather(receive_task,send_task)
 
         except Exception as e:
             print(f"Failed to connect or error during the session: {e}")

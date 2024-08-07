@@ -35,14 +35,5 @@ if __name__== "__main__":
         COMMUNICATIONthread = threading.Thread(target=run_communication)
         COMMUNICATIONthread.start()
         
-    #if(ROCKETPROTOCOL_ON):
-    #    while(mRocketProtocol.AlgorithmProcess(mIMUmanager.mSensorDataQueue)):
-    #        print("RocketProtocol Processing")
-    
-    for i in range(1000):
-        data = ["1","1","6","2","1","6","1","1","6"]
-        data[0]= np.random.normal(0, 5)
-        data[3]= np.random.normal(0, 5)
-        mIMUmanager.mSensorCommunicationDataQueue.put(data)
-        time.sleep(0.1)
-    
+    while not mRocketProtocol.AlgorithmProcess(mIMUmanager.mSensorDataQueue):
+        continue

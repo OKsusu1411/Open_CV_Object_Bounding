@@ -209,8 +209,8 @@ class MainWindow(QMainWindow):
         self.maingridlayout.addWidget(self.mCoordinateWidget, 3, 0)
 ###############################################################################################
 
-        self.mWifiSignalWidget=WifiSignalWidget()
-        self.maingridlayout.addWidget(self.mWifiSignalWidget, 1, 0)
+        #self.mWifiSignalWidget=WifiSignalWidget()
+        #self.maingridlayout.addWidget(self.mWifiSignalWidget, 1, 0)
 
         self.mCommuincationStatusLabel=QLabel('timedelay')
         self.maingridlayout.addWidget(self.mCommuincationStatusLabel, 2, 0)
@@ -241,9 +241,9 @@ class MainWindow(QMainWindow):
         
         self.mCommunicationManager.start()
 
-        self.mSerialCommunicationManager = SerialCommunicationManager(self)
-        self.mSerialCommunicationManager.start()
-        self.mSerialCommunicationManager.IsZigbee_data.connect(self.mButtonGraphList[1].update_icon)
+        #self.mSerialCommunicationManager = SerialCommunicationManager(self)
+        #self.mSerialCommunicationManager.start()
+       # self.mSerialCommunicationManager.IsZigbee_data.connect(self.mButtonGraphList[1].update_icon)
         for mButton in self.mForceButtonList:
             mButton.setCommuincation(self.mCommunicationManager)
 
