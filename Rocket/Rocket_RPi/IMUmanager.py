@@ -96,6 +96,8 @@ class IMUmanager:
     
 
     async def communicationData(self):
+        websocket = None
+        
         try:
             self.IsCommunication=True
             uri = f"ws://{self.SERVER_IP}:{self.SERVER_PORT}"
