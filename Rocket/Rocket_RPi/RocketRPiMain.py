@@ -23,10 +23,14 @@ if __name__== "__main__":
 
     if(COMMUNICATION_ON):
         def run_communication():
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(mIMUmanager.communicationData())
-            loop.close()
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(mIMUmanager.communicationData())
+            except Exception as e:
+                print(f"Exception in run_communication: {e}")
+            finally:
+                loop.close()
             
         COMMUNICATIONthread = threading.Thread(target=run_communication)
         COMMUNICATIONthread.start()
