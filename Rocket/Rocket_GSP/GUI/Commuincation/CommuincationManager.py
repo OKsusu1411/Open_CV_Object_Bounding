@@ -27,7 +27,7 @@ class CommunicationManager(QThread):
         self.mSendDataQueue = queue.Queue()
         self.parent=parent
 
-        self.SERVER_IP = '10.210.60.149'  # 서버의 IP 주소를 입력하세요
+        self.SERVER_IP = '10.210.60.50'  # 서버의 IP 주소를 입력하세요
         self.SERVER_PORT = 8881  # 서버의 포트를 입력하세요
 
     async def send_messages(self, websocket):# Send new interval to client
@@ -88,37 +88,37 @@ class CommunicationManager(QThread):
         try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            loop.run_until_complete(self.start_server('10.210.60.149',8881))
+            loop.run_until_complete(self.start_server(self.SERVER_IP,self.SERVER_PORT))
         except Exception as e:
             print(f"Error : {e}")
         finally:
             loop.close()
                     
-    async def run_communication(self):
-        try:
-            uri = f"ws://{self.SERVER_IP}:{self.SERVER_PORT}"
-            async with websockets.connect(uri) as websocket:
-                print(f'connected to {self.SERVER_IP}:{self.SERVER_PORT}')
-                #while True:
-                    # 데이터 전송
-                    #print(json_RocketStatus)
-                send_task = asyncio.create_task(self.send_messages(websocket))
+    # async def run_communication(self):
+    #     try:
+    #         uri = f"ws://{self.SERVER_IP}:{self.SERVER_PORT}"
+    #         async with websockets.connect(uri) as websocket:
+    #             print(f'connected to {self.SERVER_IP}:{self.SERVER_PORT}')
+    #             #while True:
+    #                 # 데이터 전송
+    #                 #print(json_RocketStatus)
+    #             send_task = asyncio.create_task(self.send_messages(websocket))
 
-                # Receive new interval from server
-                receive_task = asyncio.create_task(self.receive_messages(websocket))
+    #             # Receive new interval from server
+    #             receive_task = asyncio.create_task(self.receive_messages(websocket))
 
-                await asyncio.gather(send_task(), receive_task())
+    #             await asyncio.gather(send_task(), receive_task())
 
-        except Exception as e:
-            print(f"Failed to connect or error during the session: {e}")
+    #     except Exception as e:
+    #         print(f"Failed to connect or error during the session: {e}")
 
-        except KeyboardInterrupt:
-            print("bye2")
-            self.IsCommunication=False
-            websocket.close()
+    #     except KeyboardInterrupt:
+    #         print("bye2")
+    #         self.IsCommunication=False
+    #         websocket.close()
             
-        finally:
-            websocket.close()
+    #     finally:
+    #         websocket.close()
     
     async def start_server(self, host, port):
         async with websockets.serve(self.chat_handler, host, port, ping_interval=10, ping_timeout=20):

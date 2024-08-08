@@ -7,7 +7,7 @@ import asyncio
 import numpy as np
 
 IMU_ON = True
-COMMUNICATION_ON = False
+COMMUNICATION_ON = True
 
 
 if __name__== "__main__":
@@ -37,7 +37,7 @@ if __name__== "__main__":
         #    data[3]= np.random.normal(0, 5)
         #    mIMUmanager.mSensorCommunicationDataQueue.put(data)
         #    time.sleep(0.1)
-   
+#    mRocketProtocol.setSeperationServoBoolean(False)
     while not mRocketProtocol.AlgorithmProcess(mIMUmanager.mSensorDataQueue):
         continue
 

@@ -28,11 +28,11 @@ class IMUmanager:
         self.filters = [MovingAverageFilter(window_size) for _ in range(self.number_of_item)]
        
         # 서버 정보
-        self.SERVER_IP = '10.210.60.149 '  # 서버의 IP 주소를 입력하세요
+        self.SERVER_IP = '10.210.60.50 '  # 서버의 IP 주소를 입력하세요
         self.SERVER_PORT = 8881  # 서버의 포트를 입력하세요
 
         self.IsCommunication=True
-        self.ser =Serial('/dev/ttyUSB0',115200,parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS)
+        self.ser =Serial('/dev/ttyS0',115200,parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS)
         
     def getData(self):
         while True:
@@ -90,64 +90,76 @@ class IMUmanager:
     #         print(f"Failed to connect or error during the session: {e}")
             
     async def send_messages(self, websocket):
-        while True:
-            while not self.mSensorCommunicationDataQueue.empty():
+            try:
+                while not self.mSensorCommunicationDataQueue.empty():
+                    # 과부화 방지
+                    if self.mSensorCommunicationDataQueue.qsize()>5:
+                        self.mSensorCommunicationDataQueue.get()
 
-                # 과부화 방지
-                if self.mSensorCommunicationDataQueue.qsize()>5:
-                    self.mSensorCommunicationDataQueue.get()
-
-                #센서값 반환
-                sensor_item = self.mSensorCommunicationDataQueue.get_nowait()
-                
-                # 데이터 string화
-                # self.received_data=str(round(sensor_item[0],3))
-                # for i in range(self.number_of_item-1):
-                #     self.received_data+=","
-                #     self.received_data+=str(round(sensor_item[i+1],3))
-                self.received_data = ",".join([str(round(val, 3)) for val in sensor_item])
-                
-                # 이그나이터 상태, 단분리 상태, 1단 2단 서보 상태
-                # 속도 3축 , 각속도 3축 값
-                # 위치 3축 값 
-                RocketStatus = {
-                    'Time': round(time.time() % 60, 3),
-                    'IMUData': self.received_data,
-                    'IsIgnition': self.mRocketProtocol.IsIgnition,
-                    'IsSeperation': self.mRocketProtocol.IsSeperation,
-                    'Is1stServo': self.mRocketProtocol.Is1stServo,
-                    'Is2stServo': self.mRocketProtocol.Is2stServo
-                }
-                json_RocketStatus = json.dumps(RocketStatus)
-                print(json_RocketStatus)
-                await websocket.send(json_RocketStatus)
+                    #센서값 반환
+                    sensor_item = self.mSensorCommunicationDataQueue.get_nowait()
+                    
+                    # 데이터 string화
+                    # self.received_data=str(round(sensor_item[0],3))
+                    # for i in range(self.number_of_item-1):
+                    #     self.received_data+=","
+                    #     self.received_data+=str(round(sensor_item[i+1],3))
+                    self.received_data = ",".join([str(round(val, 3)) for val in sensor_item])
+                    
+                    # 이그나이터 상태, 단분리 상태, 1단 2단 서보 상태
+                    # 속도 3축 , 각속도 3축 값
+                    # 위치 3축 값 
+                    RocketStatus = {
+                        'Time': round(time.time() % 60, 3),
+                        'IMUData': self.received_data,
+                        'IsIgnition': self.mRocketProtocol.IsIgnition,
+                        'IsSeperation': self.mRocketProtocol.IsSeperation,
+                        'Is1stServo': self.mRocketProtocol.Is1stServo,
+                        'Is2stServo': self.mRocketProtocol.Is2stServo
+                    }
+                    json_RocketStatus = json.dumps(RocketStatus)
+                    print(json_RocketStatus)
+                    
+                    await websocket.send(json_RocketStatus)
+                    await asyncio.sleep(0.1)
+            
+            except websockets.exceptions.ConnectionClosed as e:
+                print(f"Connection closed: {e}")
+            
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+            
+            except queue.Empty as e:
+                print(f"Queue is empty: {e}")
+            
+            except Exception as e:
+                print(f"Error: {e}")
 
     async def receive_messages(self, websocket):
-        try:
-            new_interval_data = await websocket.recv()
-            print("New interval received:"+str(new_interval_data))
-            if new_interval_data!="None":
-                readData = json.loads(new_interval_data)
-                if readData.get("Ignition")!=None:
-                    if(readData["Ignition"]):
-                        #self.mRocketProtocol.set2ndServoBoolean(True)
-                        print("True")
-                    else:
-                        #self.mRocketProtocol.set2ndServoBoolean(False)
-                        print("False")
-        except websockets.exceptions.ConnectionClosed:
-            print("Connection to server closed.")
+        while True:
+            try:
+                new_interval_data = await websocket.recv()
+                print("New interval received:"+str(new_interval_data))
+                if new_interval_data!="None":
+                    readData = json.loads(new_interval_data)
+                    if readData.get("Ignition")!=None:
+                        if(readData["Ignition"]):
+                            #self.mRocketProtocol.set2ndServoBoolean(True)
+                            print("True")
+                        else:
+                            #self.mRocketProtocol.set2ndServoBoolean(False)
+                            print("False")
+            except websockets.exceptions.ConnectionClosed:
+                print("Connection to server closed.")
 
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error: {e}")
-        
-        except Exception as e:
-            print(f"Error: {e}")
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+            
+            except Exception as e:
+                print(f"Error: {e}")
 
     def setRocketProtocol(self,mRocketProtocol):
         self.mRocketProtocol=mRocketProtocol
-
-    
 
     async def communicationData(self):
         websocket = None
