@@ -39,9 +39,9 @@ class IMUmanager:
             if self.ser.readable()> 0:
                 try:
                     res = self.ser.readline()
-#                    print(res)
+                    print(res)
                     self.received_data = res.decode('utf-8')
-#                    print(self.received_data)
+                    print(self.received_data)
                     self.received_data = self.received_data.strip()
                     self.received_data = self.received_data.strip('*')
                     splited_texts = self.received_data.split(',')
@@ -120,7 +120,7 @@ class IMUmanager:
                     }
                     print("4")
                     json_RocketStatus = json.dumps(RocketStatus)
-                    print(json_RocketStatus)
+                    #print(json_RocketStatus)
                     
                     await websocket.send(json_RocketStatus)
                     await asyncio.sleep(0.1)
