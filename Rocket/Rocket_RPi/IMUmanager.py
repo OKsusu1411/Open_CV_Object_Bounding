@@ -96,17 +96,17 @@ class IMUmanager:
                     # 과부화 방지
                     if self.mSensorCommunicationDataQueue.qsize()>5:
                         self.mSensorCommunicationDataQueue.get()
-
+                    print("1")
                     #센서값 반환
                     sensor_item = self.mSensorCommunicationDataQueue.get_nowait()
-                    
+                    print("2")
                     # 데이터 string화
                     # self.received_data=str(round(sensor_item[0],3))
                     # for i in range(self.number_of_item-1):
                     #     self.received_data+=","
                     #     self.received_data+=str(round(sensor_item[i+1],3))
                     self.received_data = ",".join([str(round(val, 3)) for val in sensor_item])
-                    
+                    print("3")
                     # 이그나이터 상태, 단분리 상태, 1단 2단 서보 상태
                     # 속도 3축 , 각속도 3축 값
                     # 위치 3축 값 
@@ -118,6 +118,7 @@ class IMUmanager:
                         'Is1stServo': self.mRocketProtocol.Is1stServo,
                         'Is2stServo': self.mRocketProtocol.Is2stServo
                     }
+                    print("4")
                     json_RocketStatus = json.dumps(RocketStatus)
                     print(json_RocketStatus)
                     
