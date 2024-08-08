@@ -6,7 +6,7 @@ import asyncio
 
 import numpy as np
 
-IMU_ON = False
+IMU_ON = True
 COMMUNICATION_ON = True
 ROCKETPROTOCOL_ON = False
 
