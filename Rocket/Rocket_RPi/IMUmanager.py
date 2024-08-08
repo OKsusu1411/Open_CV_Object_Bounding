@@ -121,6 +121,7 @@ class IMUmanager:
                     print(json_RocketStatus)
                     
                     await websocket.send(json_RocketStatus)
+                    print(RocketStatus)
                     await asyncio.sleep(0.1)
             
             except websockets.exceptions.ConnectionClosed as e:
