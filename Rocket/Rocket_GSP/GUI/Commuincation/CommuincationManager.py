@@ -27,8 +27,8 @@ class CommunicationManager(QThread):
         #단분리 서보 기본    2단 서보 기본
         self.mSendDataQueue = queue.Queue()
         self.parent=parent
-        self.SERVER_IP = '10.210.60.50'  # 서버의 IP 주소를 입력하세요
-        self.SERVER_PORT = 8881  # 서버의 포트를 입력하세요
+        self.SERVER_IP = '165.194.3.22'  # 서버의 IP 주소를 입력하세요
+        self.SERVER_PORT = 80  # 서버의 포트를 입력하세요
     
     async def send_messages(self, websocket):# Send new interval to client
         try:

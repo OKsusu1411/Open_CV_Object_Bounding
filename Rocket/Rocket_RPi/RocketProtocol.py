@@ -19,7 +19,7 @@ class RocketProtocol:
         self.m2ndServo = GPIO.PWM(self.m2ndServoPin, 50)
         self.m2ndServo.start(0)
 
-        self.mIgnitionRelayPin = 0 ##change
+        self.mIgnitionRelayPin = 37 ##change
         GPIO.setup(self.mIgnitionRelayPin, GPIO.OUT)
         GPIO.output(self.mIgnitionRelayPin,False)
 

@@ -28,8 +28,8 @@ class IMUmanager:
         window_size = 10
         self.filters = [MovingAverageFilter(window_size) for _ in range(self.number_of_item)]
         # 서버 정보
-        self.SERVER_IP = '10.210.60.50'  # 서버의 IP 주소를 입력하세요
-        self.SERVER_PORT = 8881  # 서버의 포트를 입력하세요
+        self.SERVER_IP = '165.194.3.22'  # 서버의 IP 주소를 입력하세요
+        self.SERVER_PORT = 80  # 서버의 포트를 입력하세요
 
         self.IsCommunication=True
         self.ser =Serial('/dev/ttyS0',115200,parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS)
