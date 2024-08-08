@@ -48,9 +48,7 @@ class CommunicationManager(QThread):
             print(f"Error: {e}")
 
     async def receive_messages(self, websocket):
-        print("alkdfladkfjl;a")
         try:
-            print("alkdfladkfjl;a")
             while True:
                 # 실제 데이터 수신
                 json_data = await websocket.recv()

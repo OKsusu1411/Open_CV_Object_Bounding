@@ -91,6 +91,7 @@ class IMUmanager:
             
     async def send_messages(self, websocket):
             try:
+                print("sending start")
                 while not self.mSensorCommunicationDataQueue.empty():
                     # 과부화 방지
                     if self.mSensorCommunicationDataQueue.qsize()>5:
@@ -121,7 +122,6 @@ class IMUmanager:
                     print(json_RocketStatus)
                     
                     await websocket.send(json_RocketStatus)
-                    print(RocketStatus)
                     await asyncio.sleep(0.1)
             
             except websockets.exceptions.ConnectionClosed as e:
