@@ -92,7 +92,7 @@ class IMUmanager:
     async def send_messages(self, websocket):
             try:
                 print("sending start")
-                while not self.mSensorCommunicationDataQueue.empty():
+                while True:
                     # 과부화 방지
                     if self.mSensorCommunicationDataQueue.qsize()>5:
                         self.mSensorCommunicationDataQueue.get()
