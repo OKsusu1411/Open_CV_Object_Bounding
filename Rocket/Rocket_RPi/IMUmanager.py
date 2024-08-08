@@ -163,10 +163,10 @@ class IMUmanager:
 
     async def communicationData(self):
         websocket = None
-        try:
-            self.IsCommunication=True
-            uri = f"ws://{self.SERVER_IP}:{self.SERVER_PORT}"
-            async with websockets.connect(uri) as websocket:
+        uri = f"ws://{self.SERVER_IP}:{self.SERVER_PORT}"
+        async with websockets.connect(uri) as websocket:
+            try:
+                self.IsCommunication=True
                 print(f'connected to {self.SERVER_IP}:{self.SERVER_PORT}')
                 # 데이터 전송
                 #print(json_RocketStatus)
@@ -177,15 +177,15 @@ class IMUmanager:
                 
                 await asyncio.gather(receive_task,send_task)
 
-        except Exception as e:
-            print(f"Failed to connect or error during the session: {e}")
-                        
-        except KeyboardInterrupt:
-            print("bye2")
-            self.IsCommunication=False
+            except Exception as e:
+                print(f"Failed to connect or error during the session: {e}")
+                            
+            except KeyboardInterrupt:
+                print("bye2")
+                self.IsCommunication=False
 
-        finally:
-            self.IsCommunication = False
+            finally:
+                self.IsCommunication = False
 
     def repeatData(self):
         while True:
