@@ -231,7 +231,7 @@ class MainWindow(QMainWindow):
         self.mCommunicationManager = CommunicationManager(self)
         self.mCommunicationManager.velocity_data.connect(self.mSensorGraphList[0].updateData)
         self.mCommunicationManager.w_velocity_data.connect(self.mSensorGraphList[1].updateData)
-        self.mCommunicationManager.position_data.connect(self.mCoordinateWidget.updateQueue)
+        #self.mCommunicationManager.position_data.connect(self.mCoordinateWidget.updateQueue)
 
         self.mCommunicationManager.Is1stServo_data.connect(self.mButtonGraphList[2].update_icon)
         self.mCommunicationManager.Is2stServo_data.connect(self.mButtonGraphList[3].update_icon)
@@ -243,10 +243,12 @@ class MainWindow(QMainWindow):
 
         #self.mSerialCommunicationManager = SerialCommunicationManager(self)
         #self.mSerialCommunicationManager.start()
-       # self.mSerialCommunicationManager.IsZigbee_data.connect(self.mButtonGraphList[1].update_icon)
+        #self.mSerialCommunicationManager.IsZigbee_data.connect(self.mButtonGraphList[1].update_icon)
         for mButton in self.mForceButtonList:
             mButton.setCommuincation(self.mCommunicationManager)
-
+        
+        for mButton in self.mLockButtonList:
+            mButton.setCommuincation(self.mCommunicationManager)
 
 
 

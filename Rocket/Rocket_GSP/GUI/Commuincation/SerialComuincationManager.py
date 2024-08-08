@@ -1,6 +1,6 @@
 import socket
 import serial
-import json   # Zigbee
+import json
 
 import queue
 from PyQt5.QtCore import *

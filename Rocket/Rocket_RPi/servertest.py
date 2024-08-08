@@ -39,6 +39,7 @@ class ServerThread(QThread):
     def change_interval(self, new_interval):
         self.new_interval = new_interval
 
+
 class ServerGUI(QWidget):
     def __init__(self):
         super().__init__()
@@ -67,6 +68,7 @@ class ServerGUI(QWidget):
 
     def change_interval(self):
         self.server_thread.change_interval(2)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

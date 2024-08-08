@@ -58,5 +58,5 @@ class CircleButtonWidget(QPushButton):
         elif self.number==6:
             data_dict ={"2ndParachute": False}
             self.Communication.mSendDataQueue.put(data_dict)
-
-        QMessageBox.about(self, "data_dict", "clicked")
+        print("ClickClickClickClickClickClickClickClickClick")
+        #QMessageBox.about(self, "data_dict", "clicked")

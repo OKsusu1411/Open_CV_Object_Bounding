@@ -8,17 +8,18 @@ import numpy as np
 
 IMU_ON = True
 COMMUNICATION_ON = True
-ROCKETPROTOCOL_ON = False
+
 
 if __name__== "__main__":
     start = time.time()
 
     mRocketProtocol = RocketProtocol()
+    #mRocketProtocol.Cleanup()
     mIMUmanager= IMUmanager(mRocketProtocol)
 
     if(IMU_ON):
         IMUthread= threading.Thread(target=mIMUmanager.getData)
-        
+
         IMUthread.start()
 
     if(COMMUNICATION_ON):
@@ -37,3 +38,6 @@ if __name__== "__main__":
         
     while not mRocketProtocol.AlgorithmProcess(mIMUmanager.mSensorDataQueue):
         continue
+
+    print("end")
+    
