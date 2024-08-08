@@ -67,7 +67,7 @@ class IMUmanager:
                 except:
                     for i in range(0,self.number_of_item):
                         self.item[i] = 0.0
-                    if(self.IsCommuincation):
+                    if(self.IsCommunication):
                         self.mSensorDataQueue.put(self.item)
                         self.mSensorCommunicationDataQueue.put(self.item)
                     else:
